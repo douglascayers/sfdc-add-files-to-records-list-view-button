@@ -1,0 +1,167 @@
+<!--
+    Inspired by Christine Miller, https://success.salesforce.com/_ui/core/chatter/groups/GroupProfilePage?g=0F93A0000004glD&fId=0D53A00002xJQTD
+
+    This page is not designed to be used by itself but rather
+    to be included (<apex:include pageName="ChatterAddFilesToRecordsPage"/>)
+    by another page that defines the 'standardController' and 'recordSetVar'
+    attributes.
+
+    The containing page is then able to be used for list view buttons
+    so that the end-user can select one or more records, click the button,
+    then this included page is able to use those selected record ids to attach
+    selected files that this included page displays.
+
+    The containing page has the responsibility of defining a javascript function
+    with name 'getRecordIds()' that returns an array of Salesforce record ids.
+    Those record ids are passed to the Lightning Component that actually lets
+    the user browse for files and attach them to the selected records.
+ -->
+<apex:page >
+
+    <apex:includeLightning />
+
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
+    <script src="{!$Resource.forcetkjs}"></script>
+    <script>$j = jQuery.noConflict();</script>
+
+    <div id="lightning"/>
+
+    <br/>
+    <br/>
+
+    <div class="slds-scope">
+
+        <div id="spinner" class="slds-spinner_container slds-hide">
+            <div class="slds-spinner--brand slds-spinner slds-spinner--medium" role="alert">
+                <span class="slds-assistive-text">Loading</span>
+                <div class="slds-spinner__dot-a"></div>
+                <div class="slds-spinner__dot-b"></div>
+            </div>
+        </div>
+
+        <!-- to avoid page jumping, keep hidden until component loads -->
+        <div id="fileUploadControls" style="display:none">
+
+            <div class="slds-page-header" role="banner">
+
+            <h3 class="slds-section-title">
+                Don't see the file you want to attach?
+                <br/>
+                Upload a file of your choice.
+            </h3>
+
+            <input id="fileInput" type="file"/>
+
+            <button onclick="uploadFile();" class="slds-button slds-button--neutral">Upload</button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+
+        var myLightning;
+
+        $Lightning.use( 'c:ChatterAddFilesToRecordsApp', function() {
+
+            $Lightning.createComponent(
+                'c:ChatterAddFilesToRecordsCmp',
+                {
+                    'recordIds' : getRecordIds() // function defined in containing VF page
+                },
+                'lightning',
+                function( newCmp ) {
+
+                    // for whatever reason, $A is only accessible in this callback
+                    // so I'm making my own reference to it so that I can use it later.
+                    // $A is necessary for creating instances of events so we can
+                    // communicate between VF and LC
+                    myLightning = $A;
+
+                    $j('#fileUploadControls').show();
+
+                }
+            );
+
+        });
+
+    </script>
+
+    <script>
+
+        var client = new forcetk.Client();
+
+        client.setSessionToken( '{!$Api.Session_ID}', 'v38.0' );
+
+        function uploadFile() {
+
+            var fileInput = $j('#fileInput');
+
+            if ( $j.trim( fileInput.val() ).length == 0 ) {
+                return;
+            }
+
+            var file = fileInput[0].files[0];
+
+            // replace periods (.) in the filename with something else (I chose underscores)
+            // otherwise the filename in salesforce excludes anything after the first period
+            var extIndex = file.name.lastIndexOf( '.' );
+            var extension = file.name.substring( extIndex );
+            var fileName = file.name.substring( 0, extIndex );
+                fileName = fileName.replace( /\./g, '_' );
+                fileName += extension;
+
+            $j('#spinner').removeClass('slds-hide');
+
+            client.createBlob(
+                'ContentVersion',       // sobject name
+                {                       // fields to set
+                    'PathOnClient' : fileName
+                },
+                fileName,               // filename
+                'VersionData',          // blob field to set
+                file,                   // file to upload
+                function( response ) {
+
+                    // response.success = true | false
+                    // response.id = new ContentVersion ID
+                    // response.errors = array of error messages
+                    console.log( response );
+
+                    // update recently viewed list
+                    // then notify lightning component to re-render
+                    client.query( 'SELECT id FROM ContentDocument WHERE latestPublishedVersionId = \'' + response.id + '\' FOR VIEW', function( response ) {
+
+                        // response.done = true | false
+                        // reaponse.records = array of sobject json
+                        console.log( response );
+
+                        myLightning.get( 'e.c:ChatterFileUploadedEvent' ).setParams({
+                            'contentDocumentId' : response.records[0].Id
+                        }).fire();
+
+                    });
+
+                    $j('#fileInput').val('');
+
+                    $j('#spinner').addClass('slds-hide');
+
+                },
+                function( xhr, httpStatus, errors ) {
+
+                    console.log( xhr );
+                    console.log( httpStatus );
+                    console.log( eval( errors ) ); // convert from string to json array with properties { errorCode, message }
+
+                    $j('#spinner').addClass('slds-hide');
+
+                }
+            );
+
+        }
+
+    </script>
+
+</apex:page>

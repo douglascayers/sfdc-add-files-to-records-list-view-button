@@ -1,0 +1,227 @@
+<!--
+    Inspired by Christine Miller, https://success.salesforce.com/_ui/core/chatter/groups/GroupProfilePage?g=0F93A0000004glD&fId=0D53A00002xJQTD
+
+    This component is not designed to be used by itself but rather
+    to be included via Lightning Out in Visualforce "ChatterAddFilesToRecordsPage".
+
+    The containing page is then able to be used for list view buttons
+    so that the end-user can select one or more records, click the button,
+    then this included page is able to use those selected record ids to attach
+    selected files that the containing page displays.
+
+    The containing page has the responsibility of defining a javascript function
+    with name 'getRecordIds()' that returns an array of Salesforce record ids.
+    Those record ids are passed to the Lightning Component that actually lets
+    the user browse for files and attach them to the selected records.
+ -->
+<aura:component controller="ChatterAddFilesToRecordsController">
+
+    <!-- public attributes -->
+
+    <aura:attribute name="recordIds"
+                    type="String[]"
+                    description="Record ids to attach selected files to."/>
+
+    <aura:attribute name="pageSize"
+                    type="Integer"
+                    default="10"
+                    description="The number of files to show in the table at a time."/>
+
+    <!-- private attributes -->
+
+    <aura:attribute name="sobjectDescribe"
+                    type="Object"
+                    description="SObject Describe information derived from the record ids so we can display labels, links to list view, etc."
+                    access="private"/>
+
+    <aura:attribute name="searchTerm"
+                    type="String"
+                    description="Optional filter when searching for files shared with user."
+                    access="private"/>
+
+    <aura:attribute name="filesWrapper"
+                    type="ChatterAddFilesToRecordsController.PaginatedContentDocumentWrapper"
+                    description="Paginated list of files that match the current search filter."
+                    access="private"/>
+
+    <aura:attribute name="selectedFilesCount"
+                    type="Integer"
+                    default="0"
+                    description="To keep track of how many files the user has selected."
+                    access="private"/>
+
+    <aura:attribute name="errorMessages"
+                    type="String[]"
+                    description="Any error messages when making controller calls to display to user."
+                    access="private"/>
+
+    <!-- events -->
+
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+
+    <aura:handler event="c:ChatterFileUploadedEvent" action="{!c.handleChatterFileUploadedEvent}"/>
+
+    <!-- markup -->
+
+    <lightning:spinner aura:id="spinner"/>
+
+    <div class="slds-page-header" role="banner">
+        <div class="slds-grid">
+            <div class="slds-col slds-has-flexi-truncate">
+                <nav class="slds-m-bottom--xx-small" role="navigation" aria-label="Breadcrumbs">
+                    <ol class="slds-breadcrumb slds-list--horizontal">
+                        <li class="slds-breadcrumb__item slds-text-title--caps">
+                            <a href="{! '/' + v.sobjectDescribe.keyPrefix + '/o' }">{!v.sobjectDescribe.labelPlural}</a>
+                        </li>
+                    </ol>
+                </nav>
+                <h1 class="slds-page-header__title slds-truncate" title="Choose Files to Attach">Choose Files to Attach to Records</h1>
+            </div>
+            <div class="slds-col slds-no-flex slds-grid slds-align-top">
+                <div>
+                    <lightning:button label="Cancel" variant="neutral" onclick="{!c.handleCancelClick}"/>
+                    <lightning:button label="{! 'Attach ' + v.selectedFilesCount + ' Files'}" disabled="{!v.selectedFilesCount == 0}" iconName="utility:attach" variant="brand" onclick="{!c.handleAttachFilesClick}"/>
+                </div>
+            </div>
+        </div>
+        <div class="slds-grid">
+            <div class="slds-col slds-align-bottom">
+                <p class="slds-text-body--small">
+                    <!-- so strange, without &nbsp; the recordIds and label sit right next to each other -->
+                    <span>{!v.recordIds.length}&nbsp;</span>
+                    <span style="text-transform: lowercase">{!v.sobjectDescribe.labelPlural}</span>
+                     •
+                    <span>{!v.selectedFilesCount} files</span>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <br/>
+
+    <div class="slds-form--inline">
+
+        <!-- toggles between recently viewed and all files search mode -->
+        <div class="slds-form-element">
+            <lightning:buttonGroup >
+                <lightning:button aura:id="recentlyViewedBtn" label="Recently Viewed" onclick="{!c.showRecentlyViewedFiles}" variant="brand"/>
+                <lightning:button aura:id="sharedWithMeBtn" label="Shared with Me" onclick="{!c.showSharedWithMeFiles}"/>
+            </lightning:buttonGroup>
+        </div>
+
+        <!-- entering a search term will toggle to all files search mode -->
+        <div class="slds-form-element">
+            <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon--left">
+                <lightning:icon iconName="utility:search" size="x-small" class="slds-input__icon"/>
+                <ui:inputText aura:id="searchTerm" value="{!v.searchTerm}" placeholder="Search files..." class="slds-input" updateOn="keydown" keydown="{!c.handleSearchTermKeyDown}"/>
+            </div>
+        </div>
+
+    </div>
+
+    <br/>
+
+    <table class="slds-table slds-table--bordered slds-table--cell-buffer">
+
+        <thead>
+            <tr class="slds-text-title--caps">
+                <th scope="col" class="slds-cell-shrink">
+                    <div class="slds-truncate" title="Select">Select</div>
+                </th>
+                <th scope="col">
+                    <div class="slds-truncate" title="Title">Title</div>
+                </th>
+                <th scope="col">
+                    <div class="slds-truncate" title="Owner">Owner</div>
+                </th>
+                <th scope="col">
+                    <div class="slds-truncate" title="Last Modified Date">Last Modified Date</div>
+                </th>
+            </tr>
+        </thead>
+
+        <tbody>
+            <aura:iteration var="fileWrapper" items="{!v.filesWrapper.files}" indexVar="index">
+                <tr class="{!if(fileWrapper.selected, 'slds-is-selected', '')}">
+                    <td data-label="Select" class="slds-cell-shrink">
+                        <ui:inputCheckbox label="" value="{!fileWrapper.selected}" change="{!if(fileWrapper.selected, c.incrementSelectedFilesCount, c.decrementSelectedFilesCount)}"/>
+                    </td>
+                    <td data-label="Title">
+                        <div class="slds-truncate" title="{!fileWrapper.file.Title}">
+                            <ui:outputURL label="{!fileWrapper.file.Title + '.' + fileWrapper.file.FileExtension}"
+                                          value="{!'/' + fileWrapper.file.Id}"
+                                          target="_blank"/>
+                        </div>
+                    </td>
+                    <td data-label="Owner">
+                        <div class="slds-truncate" title="{!fileWrapper.file.Owner.Name}">
+                            {!fileWrapper.file.Owner.Name}
+                        </div>
+                    </td>
+                    <td data-label="Last Modified Date">
+                        <div class="slds-truncate" title="{!fileWrapper.file.LastModifiedDate}">
+                            <ui:outputDateTime value="{!fileWrapper.file.LastModifiedDate}"/>
+                        </div>
+                    </td>
+                </tr>
+            </aura:iteration>
+        </tbody>
+
+        <tfoot>
+            <td colspan="4">
+                <div class="slds-text-body--regular slds-text-align--left" style="color: rgb(216, 221, 230);">
+                    <lightning:button label="Previous"
+                                      variant="base"
+                                      disabled="{!not(v.filesWrapper.hasPrevious)}"
+                                      iconName="utility:chevronleft"
+                                      iconPosition="left"
+                                      onclick="{!c.handlePreviousPageClick}"/>
+                    |
+                    <lightning:button label="Next"
+                                      variant="base"
+                                      disabled="{!not(v.filesWrapper.hasNext)}"
+                                      iconName="utility:chevronright"
+                                      iconPosition="right"
+                                      onclick="{!c.handleNextPageClick}"/>
+                </div>
+            </td>
+        </tfoot>
+
+    </table>
+
+    <!-- error messages modal -->
+
+    <div aura:id="errorMessagesModal" class="slds-hide">
+
+        <div role="alertdialog" tabindex="-1" aria-labelledby="prompt-heading-id" aria-describedby="prompt-message-wrapper" class="slds-modal slds-fade-in-open slds-modal--prompt">
+
+            <div class="slds-modal__container">
+
+                <div class="slds-modal__header slds-theme--error slds-theme--alert-texture">
+                    <button class="slds-button slds-modal__close slds-button--icon-inverse" title="Close" onclick="{!c.handleCloseErrorMessagesModalClick}">
+                        <lightning:icon iconName="utility:close" size="medium" alternativeText="Close"/>
+                    </button>
+                    <h2 class="slds-text-heading--medium" id="prompt-heading-id">Sorry to interrupt</h2>
+                </div>
+
+                <div class="slds-modal__content slds-p-around--medium">
+                    <div>
+                        <aura:iteration var="error" items="{!v.errorMessages}">
+                            <p>{!error}</p>
+                        </aura:iteration>
+                    </div>
+                </div>
+
+                <div class="slds-modal__footer slds-theme--default">
+                    <lightning:button label="Close" onclick="{!c.handleCloseErrorMessagesModalClick}"/>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="slds-backdrop slds-backdrop--open"></div>
+
+    </div>
+
+</aura:component>

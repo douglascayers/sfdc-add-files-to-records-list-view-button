@@ -1,0 +1,5 @@
+<aura:event access="GLOBAL" type="APPLICATION" description="Indicates a Chatter File was uploaded.">
+
+    <aura:attribute name="contentDocumentId" type="String"/>
+
+</aura:event>

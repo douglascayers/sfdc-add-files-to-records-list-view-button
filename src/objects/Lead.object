@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <webLinks>
+        <fullName>Attach_Files</fullName>
+        <availability>online</availability>
+        <description>Lets user select one or more Chatter Files to link to the selected records from the list view.</description>
+        <displayType>massActionButton</displayType>
+        <linkType>page</linkType>
+        <masterLabel>Attach Files</masterLabel>
+        <openType>replace</openType>
+        <page>ChatterAddFilesToLeadsPage</page>
+        <protected>false</protected>
+        <requireRowSelection>true</requireRowSelection>
+    </webLinks>
+</CustomObject>

@@ -1,0 +1,40 @@
+<apex:page standardController="Opportunity" recordSetVar="records" extensions="ChatterAddFilesToRecordsController">
+
+    <script>
+
+        /**
+         * Exposes the selected record ids from the StandardSetController
+         * to JavaScript so that the included page below can access them.
+         * This allows us to re-use the main page and wrap it with
+         * these sobject-specific pages purely so we can create list view buttons.
+         */
+        function getRecordIds() {
+
+            var recordIds = [];
+
+            <apex:repeat var="recordId" value="{!recordIds}">
+                recordIds.push( '{!recordId}' );
+            </apex:repeat>
+
+            return recordIds;
+        }
+
+    </script>
+
+    <apex:pageMessages />
+
+    <apex:outputPanel rendered="{!recordIds.size > 0}">
+
+        <apex:include pageName="ChatterAddFilesToRecordsPage"/>
+
+    </apex:outputPanel>
+
+    <apex:outputPanel rendered="{!recordIds.size == 0}">
+
+        <apex:form >
+            <apex:commandLink value="Go Back" action="{!cancel}" immediate="true"/>
+        </apex:form>
+
+    </apex:outputPanel>
+
+</apex:page>
