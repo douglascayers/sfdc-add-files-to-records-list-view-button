@@ -6,7 +6,23 @@ Overview
 
 The core of this package is a Lightning Component that lets users pick or upload Chatter Files to share to records selected from a List View. The power comes from this component being able to be launched from List View button thereby putting users in control of how to find one or more records to add one or more files to in a single operation.
 
-This project is inspired by Christine Miller who [asked on Success Community](https://success.salesforce.com/_ui/core/chatter/groups/GroupProfilePage?g=0F93A0000004glD&fId=0D53A00002xJQTD) if such a feature or app existed.
+This project is inspired by Christine Miller who [asked on Success Community](https://success.salesforce.com/_ui/core/chatter/groups/GroupProfilePage?g=0F93A0000004glD&fId=0D53A00002xJQTD) if such a feature or app existed. I didn't think one did so I developed one.
+
+Although this uses a Lightning Component, this solution is supported in both Classic and Lightning Experience.
+
+Usage
+-----
+
+Once deployed in your sandbox or dev org (instructions below) then you use it as simply as you do a List View.
+
+Start by selecting one or more records from a list view that you want to mass add files to.
+![screenshot](images/accounts-list-view.png)
+
+Then select one or more files. You can filter by recently viewed, search by filename, or upload a file on the spot.
+![screenshot](images/recently-viewed-files.png)
+
+Lastly, click the Attach Files button in top-right. For each selected record their Files related list will now show the selected files shared to them.
+![screenshot](images/attach-files.png)
 
 
 Installation
