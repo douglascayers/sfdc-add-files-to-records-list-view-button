@@ -71,7 +71,7 @@
                 <nav class="slds-m-bottom--xx-small" role="navigation" aria-label="Breadcrumbs">
                     <ol class="slds-breadcrumb slds-list--horizontal">
                         <li class="slds-breadcrumb__item slds-text-title--caps">
-                            <a href="{! '/' + v.sobjectDescribe.keyPrefix + '/o' }">{!v.sobjectDescribe.labelPlural}</a>
+                            <a href="{!'/' + v.sobjectDescribe.keyPrefix}">{!v.sobjectDescribe.labelPlural}</a>
                         </li>
                     </ol>
                 </nav>
