@@ -148,9 +148,13 @@
                     </td>
                     <td data-label="Title">
                         <div class="slds-truncate" title="{!fileWrapper.file.Title}">
+
+                            <lightning:icon iconName="{!fileWrapper.iconName}" size="small" class="slds-m-right--small"/>
+
                             <ui:outputURL label="{!fileWrapper.file.Title + '.' + fileWrapper.file.FileExtension}"
                                           value="{!'/' + fileWrapper.file.Id}"
                                           target="_blank"/>
+
                         </div>
                     </td>
                     <td data-label="Owner">

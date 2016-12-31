@@ -130,6 +130,8 @@
                     }
                 }
 
+                helper.applyIconNames( component, data );
+
                 component.set( 'v.filesWrapper', data );
                 component.set( 'v.selectedFilesCount', selectedFilesCount );
 
@@ -171,6 +173,8 @@
 
             if ( component.isValid() ) {
 
+                helper.applyIconNames( component, data );
+
                 component.set( 'v.filesWrapper', data );
                 component.set( 'v.selectedFilesCount', 0 );
 
@@ -187,6 +191,65 @@
             }
 
         }));
+
+    },
+
+    applyIconNames : function( component, filesWrapper ) {
+
+        for ( var i = 0; i < filesWrapper.files.length; i++ ) {
+
+            var iconName = 'doctype:attachment';
+            var fileWrapper = filesWrapper.files[i];
+
+            if ( /^POWER_POINT/i.test( fileWrapper.file.FileType ) ) {
+                iconName = 'doctype:ppt';
+            }
+            else if ( /^EXCEL/i.test( fileWrapper.file.FileType ) ) {
+                iconName = 'doctype:excel';
+            }
+            else if ( /^WORD/i.test( fileWrapper.file.FileType ) ) {
+                iconName = 'doctype:word';
+            }
+            else if ( /^(MP3|WAV|M4A)/i.test( fileWrapper.file.FileType ) ) {
+                iconName = 'doctype:audio';
+            }
+            else if ( /^MP4/i.test( fileWrapper.file.FileType ) ) {
+                iconName = 'doctype:mp4';
+            }
+            else if ( /^CSV/i.test( fileWrapper.file.FileType ) ) {
+                iconName = 'doctype:csv';
+            }
+            else if ( /^TEXT/i.test( fileWrapper.file.FileType ) ) {
+                iconName = 'doctype:txt';
+            }
+            else if ( /^PDF/i.test( fileWrapper.file.FileType ) ) {
+                iconName = 'doctype:pdf';
+            }
+            else if ( /^XML/i.test( fileWrapper.file.FileType ) ) {
+                iconName = 'doctype:xml';
+            }
+            else if ( /^ZIP/i.test( fileWrapper.file.FileType ) ) {
+                iconName = 'doctype:zip';
+            }
+            else if ( /^(PNG|GIF|JPG|JPEG|TIFF|BMP)/i.test( fileWrapper.file.FileType ) ) {
+                iconName = 'doctype:image';
+            }
+            else if ( /^PACK/i.test( fileWrapper.file.FileType ) ) {
+                iconName = 'doctype:pack';
+            }
+            else if ( /^(MOV|WMV|M4V)/i.test( fileWrapper.file.FileType ) ) {
+                iconName = 'doctype:movie';
+            }
+            else if ( /^LINK/i.test( fileWrapper.file.FileType ) ) {
+                iconName = 'doctype:link';
+            }
+            else if ( /^HTML/i.test( fileWrapper.file.FileType ) ) {
+                iconName = 'doctype:html';
+            }
+
+            fileWrapper.iconName = iconName;
+
+        }
 
     },
 

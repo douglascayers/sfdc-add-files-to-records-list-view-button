@@ -346,6 +346,14 @@ public with sharing class ChatterAddFilesToRecordsController {
         @AuraEnabled
         public Boolean selected { get; set; }
 
+        /**
+         * The SLDS icon type to display in the table.
+         * It is determined in the component's javascript
+         * mainly because the regex is far easier in JS than in Apex.
+         */
+        @AuraEnabled
+        public String iconName { get; set; }
+
         public ContentDocumentWrapper( ContentDocument file ) {
             this( file, false );
         }
@@ -353,6 +361,7 @@ public with sharing class ChatterAddFilesToRecordsController {
         public ContentDocumentWrapper( ContentDocument file, Boolean selected ) {
             this.file = file;
             this.selected = selected;
+            this.iconName = 'doctype:attachment';
         }
 
     }
