@@ -93,6 +93,18 @@
 
     },
 
+    handleShowAttachFilesModalClick : function( component, event, helper ) {
+
+        $A.util.removeClass( component.find( 'attachFilesModal' ), 'slds-hide' );
+
+    },
+
+    handleCloseAttachFilesModalClick : function( component, event, helper ) {
+
+        $A.util.addClass( component.find( 'attachFilesModal' ), 'slds-hide' );
+
+    },
+
     handleAttachFilesClick : function( component, event, helper ) {
 
         helper.attachFilesToRecords( component );

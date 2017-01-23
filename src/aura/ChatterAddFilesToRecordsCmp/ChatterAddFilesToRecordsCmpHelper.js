@@ -20,10 +20,13 @@
 
         var recordIds = component.get( 'v.recordIds' );
 
+        var postToChatter = component.get( 'v.postToChatter' );
+
         return helper.callAction( component, 'c.attachFilesToRecords', {
 
             'recordIds' : recordIds,
-            'fileIds' : fileIds
+            'fileIds' : fileIds,
+            'postToChatter' : postToChatter
 
         }).then( $A.getCallback( function( data ) {
 

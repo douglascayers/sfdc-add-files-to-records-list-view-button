@@ -50,6 +50,12 @@
                     description="To keep track of how many files the user has selected."
                     access="private"/>
 
+    <aura:attribute name="postToChatter"
+                    type="Boolean"
+                    default="true"
+                    description="Post a Chatter message to each record for each file being shared?"
+                    access="private"/>
+
     <aura:attribute name="errorMessages"
                     type="String[]"
                     description="Any error messages when making controller calls to display to user."
@@ -80,7 +86,7 @@
             <div class="slds-col slds-no-flex slds-grid slds-align-top">
                 <div>
                     <lightning:button label="Cancel" variant="neutral" onclick="{!c.handleCancelClick}"/>
-                    <lightning:button label="{! 'Attach ' + v.selectedFilesCount + ' Files'}" disabled="{!v.selectedFilesCount == 0}" iconName="utility:attach" variant="brand" onclick="{!c.handleAttachFilesClick}"/>
+                    <lightning:button label="{! 'Attach ' + v.selectedFilesCount + ' Files'}" disabled="{!v.selectedFilesCount == 0}" iconName="utility:attach" variant="brand" onclick="{!c.handleShowAttachFilesModalClick}"/>
                 </div>
             </div>
         </div>
@@ -193,11 +199,88 @@
 
     </table>
 
+    <!-- attach files modal -->
+
+    <div aura:id="attachFilesModal" class="slds-hide">
+
+        <div role="dialog" tabindex="-1" aria-labelledby="attach-files-prompt-heading-id" class="slds-modal slds-fade-in-open">
+
+            <div class="slds-modal__container">
+
+                <div class="slds-modal__header">
+                    <button class="slds-button slds-modal__close slds-button--icon-inverse" title="Close" onclick="{!c.handleCloseAttachFilesModalClick}">
+                        <lightning:icon iconName="utility:close" size="medium" alternativeText="Close"/>
+                    </button>
+                    <h2 class="slds-text-heading--medium" id="attach-files-prompt-heading-id">Are you sure?</h2>
+                </div>
+
+                <div class="slds-modal__content slds-p-around--medium">
+
+                    <div class="slds-grid slds-grid--pull-padded">
+
+                        <div class="slds-col slds-size--1-of-3 slds-p-around--x-small">
+                            <b>{!v.sobjectDescribe.labelPlural} Selected</b>
+                        </div>
+
+                        <div class="slds-col slds-size--2-of-3 slds-p-around--x-small">
+                            {!v.recordIds.length}
+                        </div>
+
+                    </div>
+
+                    <div class="slds-grid slds-grid--pull-padded">
+
+                        <div class="slds-col slds-size--1-of-3 slds-p-around--x-small">
+                            <b>Files Selected</b>
+                        </div>
+
+                        <div class="slds-col slds-size--2-of-3 slds-p-around--x-small">
+                            {!v.selectedFilesCount}
+                        </div>
+
+                    </div>
+
+                    <div class="slds-grid slds-grid--pull-padded">
+
+                        <div class="slds-col slds-size--1-of-3 slds-p-around--x-small">
+                            <b><lightning:input type="checkbox" label="Post to Chatter?" value="{!v.postToChatter}" checked="{!v.postToChatter}"/></b>
+                        </div>
+
+                        <div class="slds-col slds-size--2-of-3 slds-p-around--x-small">
+                            {!( v.postToChatter == true ) ? ( v.recordIds.length * v.selectedFilesCount ) : 0}
+                        </div>
+
+                    </div>
+
+                    <div class="slds-grid slds-grid--pull-padded">
+
+                        <div class="slds-col slds-size--3-of-3 slds-p-around--x-small">
+                            If checked then a Chatter post for each file will be made to each record.
+                            Users who follow the records will see the file shares in their Chatter feed.
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="slds-modal__footer">
+                    <lightning:button label="Cancel" variant="neutral" onclick="{!c.handleCloseAttachFilesModalClick}"/>
+                    <lightning:button label="Attach Files" variant="brand" onclick="{!c.handleAttachFilesClick}"/>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="slds-backdrop slds-backdrop--open"></div>
+
+    </div>
+
     <!-- error messages modal -->
 
-    <div aura:id="errorMessagesModal" class="slds-hide">
+    <div aura:id="errorMessagesModal" role="dialog" class="slds-hide">
 
-        <div role="alertdialog" tabindex="-1" aria-labelledby="prompt-heading-id" aria-describedby="prompt-message-wrapper" class="slds-modal slds-fade-in-open slds-modal--prompt">
+        <div role="alertdialog" tabindex="-1" aria-labelledby="error-message-prompt-heading-id" aria-describedby="prompt-message-wrapper" class="slds-modal slds-fade-in-open slds-modal--prompt">
 
             <div class="slds-modal__container">
 
@@ -205,7 +288,7 @@
                     <button class="slds-button slds-modal__close slds-button--icon-inverse" title="Close" onclick="{!c.handleCloseErrorMessagesModalClick}">
                         <lightning:icon iconName="utility:close" size="medium" alternativeText="Close"/>
                     </button>
-                    <h2 class="slds-text-heading--medium" id="prompt-heading-id">Sorry to interrupt</h2>
+                    <h2 class="slds-text-heading--medium" id="error-message-prompt-heading-id">Sorry to interrupt</h2>
                 </div>
 
                 <div class="slds-modal__content slds-p-around--medium">

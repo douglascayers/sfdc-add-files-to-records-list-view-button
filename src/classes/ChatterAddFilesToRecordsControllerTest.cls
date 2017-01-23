@@ -127,8 +127,9 @@ private class ChatterAddFilesToRecordsControllerTest {
 
         List<ID> recordIds = new List<ID>{ acct.id };
         List<ID> fileIds = new List<ID>{ cd.id };
+        Boolean postToChatter = true;
 
-        ChatterAddFilesToRecordsController.attachFilesToRecords( recordIds, fileIds );
+        ChatterAddFilesToRecordsController.attachFilesToRecords( recordIds, fileIds, postToChatter );
 
         Test.stopTest();
 
@@ -137,6 +138,7 @@ private class ChatterAddFilesToRecordsControllerTest {
         System.assertEquals( 1, cdls.size() );
         System.assertEquals( cd.id, cdls[0].contentDocumentId );
         System.assertEquals( acct.id, cdls[0].linkedEntityId );
+        System.assertEquals( 1, [ SELECT count() FROM FeedItem WHERE parentId = :acct.id ] );
 
     }
 
@@ -171,8 +173,9 @@ private class ChatterAddFilesToRecordsControllerTest {
 
         List<ID> recordIds = new List<ID>{ acct.id };
         List<ID> fileIds = new List<ID>{ cd.id };
+        Boolean postToChatter = false;
 
-        ChatterAddFilesToRecordsController.attachFilesToRecords( recordIds, fileIds );
+        ChatterAddFilesToRecordsController.attachFilesToRecords( recordIds, fileIds, postToChatter );
 
         Test.stopTest();
 
@@ -182,6 +185,7 @@ private class ChatterAddFilesToRecordsControllerTest {
         System.assertEquals( 1, cdls.size() );
         System.assertEquals( cd.id, cdls[0].contentDocumentId );
         System.assertEquals( acct.id, cdls[0].linkedEntityId );
+        System.assertEquals( 0, [ SELECT count() FROM FeedItem WHERE parentId = :acct.id ] );
 
     }
 

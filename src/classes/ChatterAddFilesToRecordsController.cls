@@ -57,7 +57,7 @@ public with sharing class ChatterAddFilesToRecordsController {
      * Creates ContentDocumentLinks between each record id and file id.
      */
     @AuraEnabled
-    public static void attachFilesToRecords( List<ID> recordIds, List<ID> fileIds ) {
+    public static void attachFilesToRecords( List<ID> recordIds, List<ID> fileIds, Boolean postToChatter ) {
 
         try {
 
@@ -83,10 +83,22 @@ public with sharing class ChatterAddFilesToRecordsController {
                 existingFileSharesMap.put( cdl.linkedEntityId + '_' + cdl.contentDocumentId, cdl );
             }
 
+            // get latest published version id of the selected file ids
+            Map<ID, ContentDocument> contentDocumentsMap = new MAp<ID, ContentDocument>([
+                SELECT
+                    id, latestPublishedVersionId
+                FROM
+                    ContentDocument
+                WHERE
+                    id IN :fileIds
+            ]);
+
             List<ContentDocumentLink> fileLinks = new List<ContentDocumentLink>();
+            List<FeedItem> feedItems = new List<FeedItem>();
 
             for ( ID recordId : recordIds ) {
                 for ( ID fileId : fileIds ) {
+
                     if ( !existingFileSharesMap.containsKey( recordId + '_' + fileId ) ) {
 
                         System.debug( 'Creating new file share with record: recordId=' + recordId + ', contentDocumentId=' + fileId );
@@ -102,11 +114,28 @@ public with sharing class ChatterAddFilesToRecordsController {
                         System.debug( 'File already shared with record: recordId=' + recordId + ', contentDocumentId=' + fileId );
 
                     }
+
+                    if ( postToChatter ) {
+
+                        // regardless if file has already been shared
+                        // we will make chatter post emphasizing the action
+                        feedItems.add( new FeedItem(
+                            parentId = recordId,
+                            body = 'posted a file.',
+                            relatedRecordId = contentDocumentsMap.get( fileId ).latestPublishedVersionId
+                        ));
+
+                    }
+
                 }
             }
 
             if ( fileLinks.size() > 0 ) {
                 insert fileLinks;
+            }
+
+            if ( feedItems.size() > 0 ) {
+                insert feedItems;
             }
 
         } catch ( Exception e ) {
